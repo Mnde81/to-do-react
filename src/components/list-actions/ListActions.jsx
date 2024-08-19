@@ -1,4 +1,4 @@
-
+/* eslint-disable react/prop-types */
 export function ListActions(props) {
     const { sortingAlgo, updateSorting } = props;
 
