@@ -7,27 +7,11 @@ import { TaskList } from "./components/taks-list/TaskList";
 function App() {
   const storageDataKey = 'todo-data';
   const storageIdKey = 'todo-last-id';
+  const storageSortingKey = 'todo-sorting';
   const [taskList, setTaskList] = useState(readLocalData());
   const [id, setId] = useState(readLocalId());
+  const [sortingAlgo, setSortingAlgo] = useState(readLocalSortingAlgo());
 
-  // func, be antro parametro
-  // pasileidzia kai ispiesiamas komponentas
-  // pasileidzia kai perpiesiamas komponentas
-  useEffect(() => {
-    console.log('Pasileidi "APP" komponentas...');
-  });
-
-  // func + []
-  // antras parametras be reiksmiu (tuscias masyvas)
-  // pasileidzia tik pirma karta piesiant komponenta
-  useEffect(() => {
-    console.log('"APP" - tuscias masyvas');
-  }, []);
-
-  // func + [...]
-  // antras parametras yra ne tuscias masyvas
-  // i ji ieina "useState" parametrai, kuriu reiksmems kintant
-  // reikia paleisti sia funkcija
   useEffect(() => {
     localStorage.setItem(storageDataKey, JSON.stringify(taskList));
   }, [taskList]);
@@ -35,6 +19,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem(storageIdKey, JSON.stringify(id));
   }, [id]);
+
+  useEffect(() => {
+    localStorage.setItem(storageSortingKey, JSON.stringify(sortingAlgo));
+  }, [sortingAlgo]);
 
   function readLocalData() {
     const localData = localStorage.getItem(storageDataKey);
@@ -55,6 +43,17 @@ function App() {
 
     return 0;
   }
+
+  function readLocalSortingAlgo() {
+    const localData = localStorage.getItem(storageSortingKey);
+
+    if (localData) {
+      return JSON.parse(localData);
+    }
+
+    return 'timeAsc';
+  }
+
 
   function addTask(taskText, taskColor) {
     setTaskList(prev => [
@@ -94,6 +93,25 @@ function App() {
     setTaskList(prev => prev.filter(task => task.id !== id));
   }
 
+  function sortData() {
+    const algorithmes = {
+      timeAsc: (a, b) => a.id - b.id,
+      timeDes: (a, b) => b.id - a.id,
+      colorAsc: (a, b) => a.color < b.color ? -1 : a.color === b.color ? 0 : 1,
+      colorDes: (a, b) => b.color < a.color ? -1 : a.color === b.color ? 0 : 1,
+      textAsc: (a, b) => a.text < b.text ? -1 : a.text === b.text ? 0 : 1,
+      textDes: (a, b) => b.text < a.text ? -1 : a.text === b.text ? 0 : 1,
+    };
+
+    // return ((typeof algorithmes[sortingAlgo]) === 'function') ? taskList.sort(algorithmes[sortingAlgo]) : taskList.sort(algorithmes.timeAsc);
+    // return algorithmes[sortingAlgo] ? taskList.sort(algorithmes[sortingAlgo]) : taskList.sort(algorithmes.timeAsc);
+    return sortingAlgo in algorithmes ? taskList.sort(algorithmes[sortingAlgo]) : taskList.sort(algorithmes.timeAsc);
+  }
+
+  function updateSorting(newAlgoName) {
+    setSortingAlgo(newAlgoName);
+  }
+
   window.addEventListener('keyup', (e) => {
     console.log(e.key);
   });
@@ -108,8 +126,8 @@ function App() {
         <p>Ištrintos užduotys: -</p>
       </div>
       <FormCreateTask addTaskCallback={addTask} />
-      <ListActions />
-      <TaskList data={taskList}
+      <ListActions updateSorting={updateSorting} sortingAlgo={sortingAlgo} />
+      <TaskList data={sortData()}
         updateTaskText={updateTaskText}
         updateTaskColor={updateTaskColor}
         updateTaskState={updateTaskState}
